@@ -1,4 +1,4 @@
-# Data Engineering Zoomcamp 2025 - Week 1 Homework
+# Data Engineering Zoomcamp 2025 - Homework
 
 In this homework we'll prepare the environment and practice Docker and SQL.
 
@@ -75,9 +75,6 @@ Answers:
 - 104,793;  201,407;  110,612;  27,831;  35,281
 - 104,793;  202,661;  109,603;  27,678;  35,189
 - 104,838;  199,013;  109,645;  27,688;  35,202
-
-
-## Answer 3
 
 ```sql
 SELECT
