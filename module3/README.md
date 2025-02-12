@@ -120,7 +120,4 @@ SELECT COUNT(*)
 FROM kestra-sandbox-450522.de_zoomcamp.my_table;
 ```
 
-**Answer:** Will be read 0B.
-
-
-A SELECT count(*) query uses the table's metadata, so BigQuery doesn’t scan the data of the table, resulting in 0 B being read.
+**Answer:** Will be read 0B. Because BigQuery can use metadata to return the row count without scanning the actual data.
