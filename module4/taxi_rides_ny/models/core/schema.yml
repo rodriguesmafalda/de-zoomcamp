@@ -17,7 +17,12 @@ models:
         tests:
             - not_null:
                 severity: error
-      
+
+  - name: dm_fhv_trip
+    description: > 
+      It pulls data from the staging model stg_fhv_tripdata and enriches it with location details from dim_zones. 
+      The model extracts year and month from the pickup datetime and joins trip records with pickup and dropoff zone information, filtering out unknown boroughs.
+
   - name: fact_trips
     description: >
       Taxi trips corresponding to both service zones (Green and yellow).

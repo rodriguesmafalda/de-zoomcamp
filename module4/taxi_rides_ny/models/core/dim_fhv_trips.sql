@@ -32,23 +32,3 @@ inner join dim_zones as pickup_zone
 on fhv_tripdata.pickup_locationid = pickup_zone.locationid
 inner join dim_zones as dropoff_zone
 on fhv_tripdata.dropoff_locationid = dropoff_zone.locationid
-
-
-WITH trip_dur_perc AS (
-    SELECT
-        pickup_zone,
-        dropoff_zone,
-        year,
-        month,
-        PERCENTILE_CONT(TIMESTAMP_DIFF(pickup_datetime, dropoff_datetime, SECOND), 0.90) OVER (PARTITION BY year, month, pickup_locationid, dropoff_locationid) AS p90
-    FROM {{ ref('dim_fhv_trips') }}
-)
-
-
-SELECT * FROM trip_dur_perc
-
-
-
-
-
-
