@@ -190,3 +190,12 @@ For the Trips that **respectively** started from `Newark Airport`, `SoHo`, and `
 - LaGuardia Airport, Saint Albans, Howard Beach
 - LaGuardia Airport, Rosedale, Bath Beach
 - LaGuardia Airport, Yorkville East, Greenpoint
+
+```sql
+SELECT *
+FROM `kestra-sandbox-450522.trips_data_all.fct_fhv_monthly_zone_traveltime_p90`
+WHERE pickup_zone IN ('Newark Airport', 'SoHo', 'Yorkville East')
+AND year = 2019 and month = 11
+ORDER BY p90 DESC
+LIMIT 100;
+```
