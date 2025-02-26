@@ -155,6 +155,35 @@ Considering the YoY Growth in 2020, which were the yearly quarters with the best
 -  ✅ green: {best: 2020/Q1, worst: 2020/Q2}, yellow: {best: 2020/Q1, worst: 2020/Q2}
 - green: {best: 2020/Q1, worst: 2020/Q2}, yellow: {best: 2020/Q3, worst: 2020/Q4}
 
+```sql
+WITH revenue_data AS (
+    SELECT 
+        service_type,
+        quarter_label,
+        revenue_quarter,
+        SUM(total_revenue_quarterly) AS total_revenue_quarterly,
+        -- Get revenue from the same quarter last year
+        LAG(SUM(total_revenue_quarterly)) OVER (
+            PARTITION BY service_type 
+            ORDER BY revenue_quarter
+        ) AS previous_year_revenue
+    FROM `kestra-sandbox-450522.dbt_mrodrigues.fct_taxi_trips_quarterly_revenue`
+    GROUP BY quarter_label, service_type, revenue_quarter
+)
+SELECT 
+    service_type,
+    quarter_label,
+    revenue_quarter,
+    total_revenue_quarterly,
+    previous_year_revenue,
+    -- Avoid division by zero
+    ROUND(
+        (total_revenue_quarterly - previous_year_revenue) / NULLIF(previous_year_revenue, 0) * 100, 2
+    ) AS yoy_growth_percentage
+FROM revenue_data
+WHERE date(revenue_quarter) between '2019-01-01' and '2021-01-01'
+ORDER BY revenue_quarter, service_type;
+```
 
 ### Question 6: P97/P95/P90 Taxi Monthly Fare
 
@@ -170,6 +199,17 @@ Now, what are the values of `p97`, `p95`, `p90` for Green Taxi and Yellow Taxi, 
 -  ✅ green: {p97: 40.0, p95: 33.0, p90: 24.5}, yellow: {p97: 31.5, p95: 25.5, p90: 19.0}
 - green: {p97: 55.0, p95: 45.0, p90: 26.5}, yellow: {p97: 52.0, p95: 25.5, p90: 19.0}
 
+```sql
+SELECT
+    service_type,
+    -- trip_year,
+    -- trip_month,
+    PERCENTILE_CONT(fare_amount, 0.97) OVER (PARTITION BY service_type, trip_year, trip_month) AS fare_p97,
+    PERCENTILE_CONT(fare_amount, 0.95) OVER (PARTITION BY service_type, trip_year, trip_month) AS fare_p95,
+    PERCENTILE_CONT(fare_amount, 0.90) OVER (PARTITION BY service_type, trip_year, trip_month) AS fare_p90
+FROM `kestra-sandbox-450522.dbt_mrodrigues..fct_taxi_trips_monthly_fare_p95`
+WHERE trip_year= 2020 AND trip_month =4
+```
 
 ### Question 7: Top #Nth longest P90 travel time Location for FHV
 
@@ -193,9 +233,9 @@ For the Trips that **respectively** started from `Newark Airport`, `SoHo`, and `
 
 ```sql
 SELECT *
-FROM `kestra-sandbox-450522.trips_data_all.fct_fhv_monthly_zone_traveltime_p90`
+FROM `kestra-sandbox-450522.dbt_mrodrigues.fct_fhv_monthly_zone_traveltime_p90`
 WHERE pickup_zone IN ('Newark Airport', 'SoHo', 'Yorkville East')
-AND year = 2019 and month = 11
+AND year = 2019 and month = 1
 ORDER BY p90 DESC
 LIMIT 100;
 ```
