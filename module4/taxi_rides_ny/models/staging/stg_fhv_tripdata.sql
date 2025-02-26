@@ -23,6 +23,14 @@ select
     cast(dropOff_datetime as timestamp) as dropoff_datetime,
 
     -- trip info
-    SR_Flag,
-
+    SR_Flag
 from tripdata
+where rn = 1
+
+
+-- dbt build --select <model_name> --vars '{'is_test_run': 'false'}'
+{% if var('is_test_run', default=true) %}
+
+  limit 100
+
+{% endif %}
