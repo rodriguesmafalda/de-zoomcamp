@@ -2,7 +2,7 @@ from pyflink.datastream import StreamExecutionEnvironment
 from pyflink.table import EnvironmentSettings, StreamTableEnvironment
 
 def create_events_aggregated_sink(t_env):
-    table_name = 'processed_events_aggregated'
+    table_name = 'events_aggregated'
     sink_ddl = f"""
         CREATE TABLE {table_name} (
             PULocationID INT,
@@ -22,7 +22,7 @@ def create_events_aggregated_sink(t_env):
     return table_name
 
 def create_events_source_kafka(t_env):
-    table_name = "events"
+    table_name = "green_trips_events"
     source_ddl = f"""
         CREATE TABLE {table_name} (
             lpep_pickup_datetime TIMESTAMP(3),
@@ -37,7 +37,7 @@ def create_events_source_kafka(t_env):
         ) WITH (
             'connector' = 'kafka',
             'properties.bootstrap.servers' = 'redpanda-1:29092',
-            'topic' = 'test-topic',
+            'topic' = 'green-trips',
             'scan.startup.mode' = 'earliest-offset',
             'properties.auto.offset.reset' = 'earliest',
             'format' = 'json'
@@ -72,7 +72,6 @@ def log_aggregation():
             SESSION(TABLE {source_table}, DESCRIPTOR(lpep_dropoff_datetime), INTERVAL '5' MINUTE)
         )
         GROUP BY PULocationID, DOLocationID;
-
         """).wait()
 
     except Exception as e:
