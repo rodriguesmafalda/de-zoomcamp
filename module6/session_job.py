@@ -1,16 +1,14 @@
 from pyflink.datastream import StreamExecutionEnvironment
-from pyflink.table import EnvironmentSettings, DataTypes, TableEnvironment, StreamTableEnvironment
-from pyflink.common.watermark_strategy import WatermarkStrategy
-from pyflink.common.time import Duration
+from pyflink.table import EnvironmentSettings, StreamTableEnvironment
 
 def create_events_aggregated_sink(t_env):
     table_name = 'processed_events_aggregated'
     sink_ddl = f"""
         CREATE TABLE {table_name} (
-            event_hour TIMESTAMP(3),
-            test_data INT,
-            num_hits BIGINT,
-            PRIMARY KEY (event_hour, test_data) NOT ENFORCED
+            PULocationID INT,
+            DOLocationID INT,
+            longest_trips BIGINT,
+            PRIMARY KEY (PULocationID, DOLocationID) NOT ENFORCED
         ) WITH (
             'connector' = 'jdbc',
             'url' = 'jdbc:postgresql://postgres:5432/postgres',
@@ -27,10 +25,15 @@ def create_events_source_kafka(t_env):
     table_name = "events"
     source_ddl = f"""
         CREATE TABLE {table_name} (
+            lpep_pickup_datetime TIMESTAMP(3),
+            lpep_dropoff_datetime TIMESTAMP(3),
+            PULocationID INTEGER,
+            DOLocationID INTEGER,
+            passenger_count INTEGER,
+            trip_distance DOUBLE,
+            tip_amount DOUBLE,
             test_data INTEGER,
-            event_timestamp BIGINT,
-            event_watermark AS TO_TIMESTAMP_LTZ(event_timestamp, 3),
-            WATERMARK for event_watermark as event_watermark - INTERVAL '1' SECOND
+            WATERMARK for lpep_dropoff_datetime as lpep_dropoff_datetime - INTERVAL '5' SECOND
         ) WITH (
             'connector' = 'kafka',
             'properties.bootstrap.servers' = 'redpanda-1:29092',
@@ -54,16 +57,6 @@ def log_aggregation():
     settings = EnvironmentSettings.new_instance().in_streaming_mode().build()
     t_env = StreamTableEnvironment.create(env, environment_settings=settings)
 
-    watermark_strategy = (
-        WatermarkStrategy
-        .for_bounded_out_of_orderness(Duration.of_seconds(5))
-        .with_timestamp_assigner(
-            # This lambda is your timestamp assigner:
-            #   event -> The data record
-            #   timestamp -> The previously assigned (or default) timestamp
-            lambda event, timestamp: event[2]  # We treat the second tuple element as the event-time (ms).
-        )
-    )
     try:
         # Create Kafka table
         source_table = create_events_source_kafka(t_env)
@@ -72,14 +65,14 @@ def log_aggregation():
         t_env.execute_sql(f"""
         INSERT INTO {aggregated_table}
         SELECT
-            window_start as event_hour,
-            test_data,
-            COUNT(*) AS num_hits
+            PULocationID,
+            DOLocationID,
+            COUNT(*) AS longest_trips
         FROM TABLE(
-            TUMBLE(TABLE {source_table}, DESCRIPTOR(event_watermark), INTERVAL '1' MINUTE)
+            SESSION(TABLE {source_table}, DESCRIPTOR(lpep_dropoff_datetime), INTERVAL '5' MINUTE)
         )
-        GROUP BY window_start, test_data;
-        
+        GROUP BY PULocationID, DOLocationID;
+
         """).wait()
 
     except Exception as e:
