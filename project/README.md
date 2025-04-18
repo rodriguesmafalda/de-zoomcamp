@@ -145,6 +145,10 @@ This flow will:
 
 ### 6. Load with BigQuery CLI 
 
+After uploading the CSV to your GCS bucket, you can create the base BigQuery table using the `bq` CLI.
+
+This command loads the CSV as an internal table in BigQuery, with automatic schema detection and header skipping:
+
 ```bash
 bq load \                                                                   
     --source_format=CSV \
@@ -154,6 +158,8 @@ bq load \
     gs://public-life-data-seattle-bucket/public_life_data.csv
 
 ```
+
+> 💡 This table (public_life_data_seattle) will serve as the base for creating the partitioned and clustered summary table used in the dashboard.
 
 
 ### 7. Create the Summary Table in BigQuery
