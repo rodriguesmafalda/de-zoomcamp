@@ -143,7 +143,20 @@ This flow will:
 - Create a partitioned and clustered materialized table for analysis  
 
 
-### 6. Create the Summary Table in BigQuery
+### 6. Load with BigQuery CLI 
+
+```bash
+bq load \                                                                   
+    --source_format=CSV \
+    --skip_leading_rows=1 \
+    --autodetect \
+    project-zoomcamp-457121:public_life_data_seattle_dataset.public_life_data_seattle \
+    gs://public-life-data-seattle-bucket/public_life_data.csv
+
+```
+
+
+### 7. Create the Summary Table in BigQuery
 
 After running the main pipeline flow, you can create an aggregated and optimized table for analysis and dashboarding.
 
