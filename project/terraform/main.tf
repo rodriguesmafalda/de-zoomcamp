@@ -14,7 +14,7 @@ provider "google" {
 }
 
 
-resource "google_storage_bucket" "spotify-tracks-bucket" {
+resource "google_storage_bucket" "public-life-data-seattle-bucket" {
   name          = var.gcs_bucket_name
   location      = var.location
   force_destroy = true
@@ -30,7 +30,7 @@ resource "google_storage_bucket" "spotify-tracks-bucket" {
   }
 }
 
-resource "google_bigquery_dataset" "spotify-tracks-dataset" {
+resource "google_bigquery_dataset" "public_life_data_seattle_dataset" {
   dataset_id = var.bq_dataset_name
   location   = var.location
 }

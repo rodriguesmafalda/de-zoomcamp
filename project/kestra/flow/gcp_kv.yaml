@@ -1,21 +1,27 @@
 id: 04_gcp_kv
-namespace: spotify-tracks
+namespace: public_life_data_seattle
 
 tasks:
   - id: gcp_project_id
     type: io.kestra.plugin.core.kv.Set
     key: GCP_PROJECT_ID
     kvType: STRING
-    value: project-zoomcamp-457121 # TODO replace with your project id
+    value: project-zoomcamp-457121
 
   - id: gcp_location
     type: io.kestra.plugin.core.kv.Set
     key: GCP_LOCATION
     kvType: STRING
-    value: us-west1
+    value: US
 
   - id: gcp_bucket_name
     type: io.kestra.plugin.core.kv.Set
     key: GCP_BUCKET_NAME
     kvType: STRING
-    value: spotify-tracks-bucket # TODO make sure it's globally unique!
+    value: public-life-data-seattle-bucket
+
+  - id: gcp_dataset
+    type: io.kestra.plugin.core.kv.Set
+    key: GCP_DATASET
+    kvType: STRING
+    value: public_life_data_seattle_dataset

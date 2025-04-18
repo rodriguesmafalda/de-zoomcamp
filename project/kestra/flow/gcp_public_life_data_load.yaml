@@ -1,0 +1,135 @@
+id: data_load_gcs
+namespace: public_life_data_seattle
+
+variables:
+  file: "public_life_data.csv"
+  gcs_file: "gs://{{kv('GCP_BUCKET_NAME')}}/{{vars.file}}"
+  data: "{{ outputs.extract_and_convert.outputFiles['public_life_data.csv'] }}"
+  ext_table: "public_life_staying_ext"  # Corrigi a definição da variável
+  materialized_table: "public_life_staying"
+
+tasks:
+
+  - id: set_label
+    type: io.kestra.plugin.core.execution.Labels
+    labels:
+      dataset: "{{render(vars.file)}}"
+
+  - id: extract_and_convert
+    type: io.kestra.plugin.scripts.python.Script
+    taskRunner:
+      type: io.kestra.plugin.scripts.runner.docker.Docker
+    containerImage: ghcr.io/kestra-io/pydata:latest
+    outputFiles:
+      - "{{vars.file}}"
+    script: |
+      import pandas as pd
+      import requests
+
+      API_ENDPOINT = "https://data.seattle.gov/resource/5mzj-4rtf.json"
+      CHUNK_SIZE = 1000
+
+      def retrieve_all_records(api_url, chunk_size=1000):
+          records = []
+          current_offset = 0
+
+          while True:
+              params = {
+                  "$limit": chunk_size,
+                  "$offset": current_offset
+              }
+              res = requests.get(api_url, params=params)
+
+              if res.status_code != 200:
+                  raise RuntimeError(f"Failed to fetch data: {res.status_code}")
+
+              batch = res.json()
+              if not batch:
+                  break
+
+              records.extend(batch)
+              current_offset += chunk_size
+
+          return records
+
+      def transform(df):
+          df["staying_time_start"] = pd.to_datetime(df["staying_time_start"], errors="coerce")
+          df["staying_time_end"] = pd.to_datetime(df["staying_time_end"], errors="coerce")
+
+          df["year"] = df["staying_time_start"].dt.year.astype(str)
+          df["month"] = df["staying_time_start"].dt.month.astype(str)
+          df["day"] = df["staying_time_start"].dt.day.astype(str)
+
+          if 'staying_notes' in df.columns:
+              df['staying_notes'] = df['staying_notes'].str.replace("\n", " ", regex=True)
+
+          rename_cols = {
+              "staying_time_start": "Start Time",
+              "staying_time_end": "End Time",
+              "staying_day_of_week": "Day of Week",
+              "staying_time_of_day": "Time of Day",
+              "staying_count_surveyor": "Surveyor Count",
+              "staying_conditions": "Conditions",
+              "staying_temperature": "Temperature",
+              "staying_group_size": "Group Size",
+              "staying_race_ethnicity": "Race Ethnicity",
+              "staying_gender": "Gender",
+              "staying_age": "Age",
+              "commercial_all": "Commercial Activity",
+              "eating_drinking": "Eating Drinking",
+              "smoking": "Smoking",
+              "cultural": "Cultural Activity",
+              "recreation_active": "Active Recreation",
+              "waiting_transportation": "Waiting for Transportation",
+              "disruptive": "Disruptive Behavior",
+              "disruptive_aggressive": "Aggressive Disruptive Behavior",
+              "disruptive_intoxicated": "Intoxicated Disruptive Behavior",
+              "staying_notes": "Notes"
+          }
+
+          return df.rename(columns=rename_cols)
+
+      def main():
+          raw_data = retrieve_all_records(API_ENDPOINT, CHUNK_SIZE)
+          if not raw_data:
+              raise ValueError("No data retrieved from the API.")
+
+          df = pd.json_normalize(raw_data)
+          df = transform(df)
+          df.to_csv("{{vars.file}}", index=False)
+
+      main()
+
+  - id: upload_to_gcs
+    type: io.kestra.plugin.gcp.gcs.Upload
+    from: "{{render(vars.data)}}"
+    to: "{{render(vars.gcs_file)}}"
+
+  - id: create_external_table
+    type: io.kestra.plugin.gcp.bigquery.Query
+    sql: |
+      CREATE OR REPLACE EXTERNAL TABLE `{{kv('GCP_PROJECT_ID')}}.{{kv('GCP_DATASET')}}.{{vars.ext_table}}`
+      OPTIONS (
+        format = 'CSV',
+        uris = ['gs://{{kv("GCP_BUCKET_NAME")}}/{{vars.file}}'],
+        skip_leading_rows = 1
+      );
+
+  - id: create_materialized_table
+    type: io.kestra.plugin.gcp.bigquery.Query
+    sql: |
+      CREATE OR REPLACE TABLE `{{kv('GCP_PROJECT_ID')}}.{{kv('GCP_DATASET')}}.{{vars.materialized_table}}` AS
+      SELECT * FROM `{{kv('GCP_PROJECT_ID')}}.{{kv('GCP_DATASET')}}.{{vars.ext_table}}`;
+
+  - id: purge_files
+    type: io.kestra.plugin.core.storage.PurgeCurrentExecutionFiles
+    description: Disable this if you'd like to inspect the outputs in Kestra.
+    disabled: false
+
+pluginDefaults:
+  - type: io.kestra.plugin.gcp
+    values:
+      serviceAccount: "{{kv('GCP_CREDS')}}"
+      projectId: "{{kv('GCP_PROJECT_ID')}}"
+      location: "{{kv('GCP_LOCATION')}}"
+      bucket: "{{kv('GCP_BUCKET_NAME')}}"
