@@ -121,26 +121,26 @@ Before running the pipeline, you must import both flows into the Kestra UI:
    - [`kestra/flows/gcp_kv.yaml`](kestra/flows/gcp_kv.yaml) – loads your GCP credentials and environment variables
    - [`kestra/flows/gcp_public_life_data_load.yaml`](kestra/flows/gcp_public_life_data_load.yaml) – the main data pipeline flow
 
-> ⚠️ **Important:** Make sure `gcp_kv.yaml` is imported first, as it defines variables that the main workflow depends on.
-
-
+> ⚠️ **Important:** Be sure to import and run `gcp_kv.yaml` first — it sets the environment variables required by the main pipeline.
 
 
 ### 5. Run the Data Pipeline with Kestra
 
-To run the pipeline, execute the following Kestra flow:
+After importing the flows, you can run the pipeline directly from the Kestra UI.
 
-**Flow file:** [`gcp_public_life_data_load.yaml`](kestra/flows/gcp_public_life_data_load.yaml)
+There are two flows involved:
+
+- [`gcp_kv.yaml`](kestra/flows/gcp_kv.yaml) — Sets your GCP credentials and environment variables  
+- [`gcp_public_life_data_load.yaml`](kestra/flows/gcp_public_life_data_load.yaml) — The main data pipeline flow
+
 
 This flow will:
 
 - Download the dataset via the Seattle Open Data API  
 - Clean and transform the data using Python and pandas  
-- Save it as a CSV and upload to your GCS bucket  
+- Save it as a CSV and upload it to your GCS bucket  
 - Create an external table in BigQuery  
 - Create a partitioned and clustered materialized table for analysis  
-
----
 
 
 ### 6. Create the Summary Table in BigQuery
