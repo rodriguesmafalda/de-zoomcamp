@@ -4,11 +4,11 @@
 
 This project demonstrates a complete data pipeline that processes public life data from Seattle. It includes:
 
-- **Ingestion** of raw data from an open API
-- **Transformation** using Python and BigQuery
-- **Data orchestration** with Kestra
-- **Infrastructure provisioning** with Terraform
-- **Visualization** through an interactive dashboard
+- **Ingestion** of raw data from an open API  
+- **Transformation** using Python and BigQuery  
+- **Data orchestration** with Kestra  
+- **Infrastructure provisioning** with Terraform  
+- **Visualization** through an interactive dashboard  
 
 The goal is to showcase end-to-end automation of a real-world dataset for data analysis and urban planning insights.
 
@@ -32,10 +32,10 @@ This data is collected following the [Gehl Institute’s Public Life Data Protoc
 
 To build a reproducible and automated data pipeline that includes:
 
-1. **Extracting data** from the Seattle open data API.
-2. **Transforming it** with Python and BigQuery SQL.
-3. **Storing** it in optimized BigQuery tables (partitioned and clustered).
-4. **Visualizing** it through an interactive dashboard.
+1. **Extracting data** from the Seattle open data API  
+2. **Transforming it** with Python and BigQuery SQL  
+3. **Storing** it in optimized BigQuery tables (partitioned and clustered)  
+4. **Visualizing** it through an interactive dashboard  
 
 ---
 
@@ -47,13 +47,13 @@ To build a reproducible and automated data pipeline that includes:
 
 ## 🧰 Tech Stack
 
-| Tool           | Purpose                            |
-|----------------|------------------------------------|
-| Terraform      | Infrastructure as code             |
-| Kestra         | Workflow orchestration             |
-| BigQuery       | Data warehousing and transformation|
-| Google Cloud Storage | Intermediate file storage  |
-| Looker Studio  | Data visualization                 |
+| Tool              | Purpose                            |
+|-------------------|------------------------------------|
+| Terraform         | Infrastructure as code             |
+| Kestra            | Workflow orchestration             |
+| BigQuery          | Data warehousing and transformation|
+| Google Cloud Storage | Intermediate file storage      |
+| Looker Studio     | Data visualization                 |
 
 ---
 
@@ -61,11 +61,13 @@ To build a reproducible and automated data pipeline that includes:
 
 ### 1. Prerequisites
 
-- Google Cloud account with BigQuery, GCS, and service account access
-- Docker installed (for Kestra and Python scripts)
-- [Kestra](https://kestra.io/docs/) running locally (or on server)
-- Google Cloud SDK (`gcloud`, `bq`)
-- A billing-enabled GCP project
+- Google Cloud account with access to BigQuery and GCS  
+- Docker installed (for Kestra and Python scripts)  
+- [Kestra](https://kestra.io/docs/) running locally or on a server  
+- Google Cloud SDK (`gcloud`, `bq`)  
+- Billing-enabled GCP project  
+
+---
 
 ### 2. Setup Terraform
 
@@ -78,22 +80,112 @@ This setup will:
 
 > ⚠️ **Note**: Make sure you have `terraform` and `gcloud` installed and authenticated, and that your GCP project has billing enabled.
 
-```bash
-./terraform/setup.sh
-This script will:
+---
+
+### 3. Setup Google Cloud Variables in Kestra
+
+Before loading data to GCP, you’ll need to configure the following variables in Kestra’s KV store.
+
+Update the flow file [`gcp_kv.yaml`](kestra/flows/gcp_kv.yaml) with your own values:
+
+- `GCP_CREDS` – Path to your service account credentials  
+- `GCP_PROJECT_ID` – Your GCP project ID  
+- `GCP_LOCATION` – e.g., `us-west1`  
+- `GCP_DATASET` – BigQuery dataset name  
+- `GCP_BUCKET_NAME` – GCS bucket name  
+
+> ⚠️ **Important:** Do **not** commit service account credentials to Git. Store them securely and keep them private.
+
+---
+
+### 4. Run the Data Pipeline with Kestra
+
+To run the pipeline, execute the following Kestra flow:
+
+**Flow file:** [`gcp_public_life_data_load.yaml`](kestra/flows/gcp_public_life_data_load.yaml)
+
+This flow will:
+
+- Download the dataset via the Seattle Open Data API  
+- Clean and transform the data using Python and pandas  
+- Save it as a CSV and upload to your GCS bucket  
+- Create an external table in BigQuery  
+- Create a partitioned and clustered materialized table for analysis  
+
+---
+
+
+### 5. Create the Summary Table in BigQuery
+
+After running the main pipeline flow, you can create an aggregated and optimized table for analysis and dashboarding.
+
+This summary table is partitioned by `date` and clustered by `Temperature`, and contains key aggregated metrics such as total people observed and gender distribution.
+
+```sql
+CREATE OR REPLACE TABLE `project-zoomcamp-457121.public_life_data_seattle_dataset.people_staying_summary`
+PARTITION BY date
+CLUSTER BY Temperature AS
+SELECT
+    DATE(`Start Time`) AS date,
+    Temperature,
+    COUNT(*) AS total_people,
+    AVG(CAST(Temperature AS FLOAT64)) AS avg_temperature,
+    COUNTIF(Gender = "Male") AS total_male,
+    COUNTIF(Gender = "Female") AS total_female
+FROM
+    `project-zoomcamp-457121.public_life_data_seattle_dataset.public_life_data_seattle`
+GROUP BY
+    date, Temperature;
 ```
 
-### 3. Setup Google Cloud Platform (GCP) with Kestra
+> 💡 **Tip:** Run this query directly in the BigQuery console after Kestra has created the initial raw table.
 
-Before we start loading data to GCP, we need to set up the Google Cloud Platform. 
+Once the people_staying_summary table is created, you can connect it to Looker Studio and build visualizations.
 
-First, adjust the following flow [`gcp_kv.yaml`](kestra/flows/gcp_kv.yaml) to include your service account, GCP project ID, BigQuery dataset and GCS bucket name (_along with their location_) as KV Store values:
-- GCP_CREDS
-- GCP_PROJECT_ID
-- GCP_LOCATION
-- GCP_DATASET
-- GCP_BUCKET_NAME.
 
-### GCP Workflow: Load Spotify tracks Data to GCP Bucket
+## 📈 Dashboard
 
-The flow code: [`gcp_public_life_data_load.yaml`](kestra/flows/gcp_public_life_data_load.yaml).
+### 👥 Total People Observed by Temperature (July 2018) (July 2018)
+
+![dashboard1](images/dashboard1.png)
+
+## 📊 Key Findings
+
+- 🟦 Most people stayed in public areas when temperatures were around 70°F.
+- 🔥 Higher temperatures (80°F+) saw a drop in the number of people observed.
+- 📆 Data shown is from July 2018, based on the `people_staying_summary` table.
+
+
+### 👥 Gender Distribution Over Time (July 2018)
+![dashboard2](images/dashboard2.png)
+
+
+This chart compares the total number of male and female individuals observed staying in public spaces throughout July 2018.
+
+It shows that, overall, the presence of men and women was relatively balanced on most days. However, some fluctuations suggest gendered differences in public space usage on specific dates, which could be further analyzed alongside contextual factors such as weather or events.
+
+
+## 🧠 Learnings
+
+- How to orchestrate data pipelines with Kestra  
+- Working with real-world open data APIs  
+- Best practices for BigQuery (partitioning & clustering)  
+- Automating infrastructure provisioning with Terraform  
+
+---
+
+## 🛠️ Future Improvements
+
+- Add data quality checks and validations  
+- Integrate additional datasets from the Public Life collection  
+- Schedule pipeline runs via Kestra  
+- Publish the dashboard and make it publicly accessible  
+
+---
+
+## 🔗 Resources
+
+- [Dataset: Public Life Data (People Staying)](https://data.seattle.gov/Transportation/Public-Life-Data-People-Staying/csd5-77em)  
+- [Kestra Documentation](https://kestra.io/docs/)  
+- [Terraform GCP Provider](https://registry.terraform.io/providers/hashicorp/google/latest/docs)  
+- [BigQuery Partitioning & Clustering](https://cloud.google.com/bigquery/docs/partitioned-tables)
