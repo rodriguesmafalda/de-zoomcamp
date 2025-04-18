@@ -101,14 +101,32 @@ Update the flow file [`gcp_kv.yaml`](kestra/flows/gcp_kv.yaml) with your own val
 
 > ⚠️ **Important:** Do **not** commit service account credentials to Git. Store them securely and keep them private.
 
----
+### 4. Run Kestra and import the Flows into Kestra (via UI)
+
+### 4.1 Run Kestra
 
 ```bash
 cd kestra/
 docker compose up -d
 ```
 
-### 4. Run the Data Pipeline with Kestra
+
+### 4.2 Import the Flows into Kestra 
+
+Before running the pipeline, you must import both flows into the Kestra UI:
+
+1. Open the [Kestra UI](http://localhost:8080/)
+2. Navigate to **Flows** → click **“Import Flow”**
+3. Import the following files in order:
+   - [`kestra/flows/gcp_kv.yaml`](kestra/flows/gcp_kv.yaml) – loads your GCP credentials and environment variables
+   - [`kestra/flows/gcp_public_life_data_load.yaml`](kestra/flows/gcp_public_life_data_load.yaml) – the main data pipeline flow
+
+> ⚠️ **Important:** Make sure `gcp_kv.yaml` is imported first, as it defines variables that the main workflow depends on.
+
+
+
+
+### 5. Run the Data Pipeline with Kestra
 
 To run the pipeline, execute the following Kestra flow:
 
@@ -125,7 +143,7 @@ This flow will:
 ---
 
 
-### 5. Create the Summary Table in BigQuery
+### 6. Create the Summary Table in BigQuery
 
 After running the main pipeline flow, you can create an aggregated and optimized table for analysis and dashboarding.
 
@@ -150,12 +168,11 @@ GROUP BY
 
 > 💡 **Tip:** Run this query directly in the BigQuery console after Kestra has created the initial raw table.
 
-Once the people_staying_summary table is created, you can connect it to Looker Studio and build visualizations.
-
+Once the `people_staying_summary` table is created, you can connect it to Looker Studio to explore and build interactive visualizations.
 
 ## 📈 Dashboard
 
-### 👥 Total People Observed by Temperature (July 2018) (July 2018)
+### 👥 Total People Observed by Temperature (July 2018)
 
 ![dashboard1](images/dashboard1.png)
 
