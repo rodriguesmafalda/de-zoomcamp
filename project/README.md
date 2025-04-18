@@ -176,8 +176,7 @@ It shows that, overall, the presence of men and women was relatively balanced on
 
 ## 🛠️ Future Improvements
 
-- Add data quality checks and validations  
-- Integrate additional datasets from the Public Life collection  
+- Add data quality checks and validations
 - Schedule pipeline runs via Kestra  
 - Publish the dashboard and make it publicly accessible  
 
