@@ -224,9 +224,24 @@ It shows that, overall, the presence of men and women was relatively balanced on
 
 - Add data quality checks and validations
 - Schedule pipeline runs via Kestra  
-- Publish the dashboard and make it publicly accessible  
+- Publish the dashboard and make it publicly accessible 
+- Integrate with Spark
 
 ---
+
+---
+
+### 🤷 Why I Didn't Use Spark or dbt
+
+While Spark and dbt are powerful tools, I chose not to include them in this project.
+
+The honest reason? I couldn't get them to work properly in time.  
+But rather than get blocked, I focused on building a complete, working pipeline using tools I could confidently apply — like Kestra, BigQuery, and Terraform.
+
+If there's one thing I've learned: *done is better than perfect* — and understanding **when not to use something** is part of becoming a better data engineer.
+
+I still plan to explore dbt and Spark more deeply in the future — but for this project, **simplicity and clarity won**.
+
 
 ## 🔗 Resources
 
