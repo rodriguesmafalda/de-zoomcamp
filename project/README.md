@@ -240,7 +240,7 @@ But rather than get blocked, I focused on building a complete, working pipeline 
 
 If there's one thing I've learned: *done is better than perfect* — and understanding **when not to use something** is part of becoming a better data engineer.
 
-I still plan to explore dbt and Spark more deeply in the future — but for this project, **simplicity and clarity won**.
+I still plan to explore dbt and Spark more deeply in the future.
 
 
 ## 🔗 Resources
