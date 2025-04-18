@@ -5,7 +5,7 @@ variables:
   file: "public_life_data.csv"
   gcs_file: "gs://{{kv('GCP_BUCKET_NAME')}}/{{vars.file}}"
   data: "{{ outputs.extract_and_convert.outputFiles['public_life_data.csv'] }}"
-  ext_table: "public_life_staying_ext"  # Corrigi a definição da variável
+  ext_table: "public_life_staying_ext"
   materialized_table: "public_life_staying"
 
 tasks:
