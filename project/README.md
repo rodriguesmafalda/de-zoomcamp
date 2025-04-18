@@ -82,6 +82,11 @@ This setup will:
 
 ---
 
+```bash
+cd terraform/
+./setup.sh
+```
+
 ### 3. Setup Google Cloud Variables in Kestra
 
 Before loading data to GCP, you’ll need to configure the following variables in Kestra’s KV store.
@@ -97,6 +102,11 @@ Update the flow file [`gcp_kv.yaml`](kestra/flows/gcp_kv.yaml) with your own val
 > ⚠️ **Important:** Do **not** commit service account credentials to Git. Store them securely and keep them private.
 
 ---
+
+```bash
+cd kestra/
+docker compose up -d
+```
 
 ### 4. Run the Data Pipeline with Kestra
 
