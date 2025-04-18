@@ -1,92 +1,99 @@
-# Data Engineering Project: Public Life Data Pipeline
+# 🏙️ Data Engineering Project: Public Life Data Pipeline
 
-## Overview
+## 📍 Overview
 
-This project demonstrates the development of a full data pipeline that processes public life data from Seattle. The pipeline includes data ingestion, transformation, and visualization in a dashboard to uncover insights about how people use public spaces over time.
+This project demonstrates a complete data pipeline that processes public life data from Seattle. It includes:
 
-## Dataset: [Public Life Data (People Staying)](https://data.seattle.gov/Transportation/Public-Life-Data-People-Staying/csd5-77em)
+- **Ingestion** of raw data from an open API
+- **Transformation** using Python and BigQuery
+- **Data orchestration** with Kestra
+- **Infrastructure provisioning** with Terraform
+- **Visualization** through an interactive dashboard
 
-This project uses the [Public Life Data (People Staying)](https://data.seattle.gov/Transportation/Public-Life-Data-People-Staying/csd5-77em) dataset provided by the Seattle Department of Transportation (SDOT). It captures observations of individuals staying still in public spaces — such as those sitting, standing, or lingering — rather than people just passing through.
+The goal is to showcase end-to-end automation of a real-world dataset for data analysis and urban planning insights.
 
-The dataset includes:
+---
 
-- Total number of people observed  
-- Demographic breakdown (age, gender, mobility status)  
-- Group sizes  
-- Postures and activities (e.g., sitting, standing, socializing)  
+## 📊 Dataset: [Public Life Data (People Staying)](https://data.seattle.gov/Transportation/Public-Life-Data-People-Staying/csd5-77em)
 
-These studies aim to support urban design, planning, and equity analysis by documenting how people use public spaces across sidewalks, parks, and plazas in Seattle.
+Provided by the Seattle Department of Transportation (SDOT), this dataset captures observations of individuals **staying still** in public spaces, including:
 
-The dataset is part of a broader public life study effort that follows the [Gehl Institute’s Public Life Data Protocol](https://gehlinstitute.org/tool/public-life-data-protocol/). Since 2017, SDOT and partner organizations have conducted these studies across the city.
+- Timestamps of observation  
+- Demographic data (age, gender, mobility status)  
+- Group size  
+- Postures and activities (e.g., sitting, eating, socializing)  
+- Weather conditions  
 
-## Objective
+This data is collected following the [Gehl Institute’s Public Life Data Protocol](https://gehlinstitute.org/tool/public-life-data-protocol/).
 
-The main goal of this project is to build a reliable and automated data pipeline, which includes:
+---
 
-1. **Data Ingestion**: Load raw CSV data from Google Cloud Storage (GCS) into an external table in BigQuery.
-2. **Transformations**: Process and optimize the data using SQL in BigQuery (partitioning, clustering, aggregations).
-3. **Visualization**: Build an interactive dashboard with at least two charts to analyze trends and patterns in the data.
+## 🎯 Objective
 
-## Architecture
+To build a reproducible and automated data pipeline that includes:
 
-![pipeline.png](images/pipeline.png)
+1. **Extracting data** from the Seattle open data API.
+2. **Transforming it** with Python and BigQuery SQL.
+3. **Storing** it in optimized BigQuery tables (partitioned and clustered).
+4. **Visualizing** it through an interactive dashboard.
 
-## Technologies Used
+---
 
-- **Terraform**: Automates infrastructure provisioning.
-- **Kestra**: Orchestrates and manages the execution of the data pipeline.
-- **BigQuery**: Stores and queries the data efficiently.
-- **Google Cloud Storage (GCS)**: Stores raw CSV data files.
-- **Looker Studio**: Visualizes processed data in interactive dashboards.
+## ⚙️ Architecture
 
-## How It Works
+![pipeline](images/pipeline.png)
 
-1. **Data Ingestion**: Data is loaded from a CSV file stored in GCS into an external table in BigQuery using Kestra.
-2. **Transformation**: A SQL query is executed in BigQuery to transform the data (partitioned and aggregated by relevant metrics).
-3. **Creating Optimized Tables**: The data is materialized into partitioned and clustered tables in BigQuery to improve query performance.
-4. **Visualization**: The transformed data is visualized through a dashboard in Metabase or Looker Studio, showing trends and distributions across time and categories.
+---
 
-## How to Run
+## 🧰 Tech Stack
 
-### Prerequisites
+| Tool           | Purpose                            |
+|----------------|------------------------------------|
+| Terraform      | Infrastructure as code             |
+| Kestra         | Workflow orchestration             |
+| BigQuery       | Data warehousing and transformation|
+| Google Cloud Storage | Intermediate file storage  |
+| Looker Studio  | Data visualization                 |
 
-1. Google Cloud Platform account with appropriate permissions for BigQuery and GCS.
-2. Kestra configured locally or on a server to orchestrate the pipeline.
-3. Access to Metabase or Looker Studio to create the dashboard.
-4. Google Cloud SDK (`gcloud` and `bq`) tools installed.
+---
 
-### Steps
+## 🚀 How to Run the Pipeline
 
-1. **Kestra Setup**:
-   - Ensure Kestra is configured in your environment.
-   - Create configuration variables in Kestra for your `GCP_PROJECT_ID`, `GCP_DATASET`, `GCP_BUCKET_NAME`, etc.
+### 1. Prerequisites
 
-2. **Loading the Data**:
-   - Run the Kestra workflow to load the data from GCS into an external table in BigQuery.
-   - Ensure the CSV files are uploaded to a GCS bucket accessible from your project.
+- Google Cloud account with BigQuery, GCS, and service account access
+- Docker installed (for Kestra and Python scripts)
+- [Kestra](https://kestra.io/docs/) running locally (or on server)
+- Google Cloud SDK (`gcloud`, `bq`)
+- A billing-enabled GCP project
 
-3. **Data Transformation**:
-   - Execute SQL queries in BigQuery to transform and optimize the data (e.g., partitioning and clustering).
+### 2. Setup Terraform
 
-4. **Creating the Dashboard**:
-   - Create or import the dashboard in Metabase or Looker Studio.
-   - Connect the dashboard to your BigQuery dataset and add visualizations based on the transformed data.
+To create the necessary GCP resources (BigQuery dataset and GCS bucket), you can use the provided Terraform configuration.
 
-5. **Verify the Results**:
-   - Open the dashboard and explore the visual insights (e.g., activity by site, demographic breakdowns over time).
+This setup will:
 
-## Configuration
+- Initialize and apply the Terraform configuration  
+- Provision the required GCP infrastructure (GCS bucket and BigQuery dataset)
 
-- **GCP_PROJECT_ID**: `project-zoomcamp-457121`
-- **GCP_DATASET**: `public_life_data_seattle`
-- **GCP_BUCKET_NAME**: `your_bucket_name`
-- **GCP_LOCATION**: `US`
+> ⚠️ **Note**: Make sure you have `terraform` and `gcloud` installed and authenticated, and that your GCP project has billing enabled.
 
-### Kestra Configuration (Example)
+```bash
+./terraform/setup.sh
+This script will:
+```
 
-```yaml
-- id: gcp_project_id
-  type: io.kestra.plugin.core.kv.Set
-  key: GCP_PROJECT_ID
-  kvType: STRING
-  value: project-zoomcamp-457121
+### 3. Setup Google Cloud Platform (GCP) with Kestra
+
+Before we start loading data to GCP, we need to set up the Google Cloud Platform. 
+
+First, adjust the following flow [`gcp_kv.yaml`](kestra/flows/gcp_kv.yaml) to include your service account, GCP project ID, BigQuery dataset and GCS bucket name (_along with their location_) as KV Store values:
+- GCP_CREDS
+- GCP_PROJECT_ID
+- GCP_LOCATION
+- GCP_DATASET
+- GCP_BUCKET_NAME.
+
+### GCP Workflow: Load Spotify tracks Data to GCP Bucket
+
+The flow code: [`gcp_public_life_data_load.yaml`](kestra/flows/gcp_public_life_data_load.yaml).

@@ -24,6 +24,7 @@ First, adjust the following flow [`gcp_kv.yaml`](flows/gcp_kv.yaml) to include y
 - GCP_CREDS
 - GCP_PROJECT_ID
 - GCP_LOCATION
+- GCP_DATASET
 - GCP_BUCKET_NAME.
 
 
