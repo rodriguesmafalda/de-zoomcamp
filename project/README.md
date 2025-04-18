@@ -227,9 +227,6 @@ It shows that, overall, the presence of men and women was relatively balanced on
 - Publish the dashboard and make it publicly accessible 
 - Integrate with Spark
 
----
-
----
 
 ### 🤷 Why I Didn't Use Spark or dbt
 
